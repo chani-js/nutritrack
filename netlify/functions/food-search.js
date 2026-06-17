@@ -16,7 +16,6 @@ const handler = async (event) => {
       page_size:    50,
       json:         1,
       lc:           'fr',
-      countries_tags: 'france',
     });
 
     const res = await fetch(
@@ -26,7 +25,6 @@ const handler = async (event) => {
 
     const data = await res.json();
 
-    // Normalise accents
     const normalize = s => (s || '').toLowerCase()
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9 ]/g, '');
@@ -38,7 +36,8 @@ const handler = async (event) => {
       .filter(p => {
         const n    = p.nutriments;
         const name = normalize(p.product_name_fr || p.product_name || '');
-        return name && queryWords.some(w => name.includes(w)) && n?.['energy-kcal_100g'] > 0;
+        // Nom doit contenir au moins un mot ET avoir des calories
+        return name && queryWords.some(w => name.includes(w)) && (n?.['energy-kcal_100g'] ?? 0) > 0;
       })
       .map(p => {
         const n     = p.nutriments;
