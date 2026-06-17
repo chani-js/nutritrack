@@ -8,8 +8,9 @@ import { useActivityLogs, useWeightLogs } from './hooks/useDataLogs';
 import { AuthPage }      from './pages/AuthPage';
 import { Dashboard }     from './pages/Dashboard';
 import { FoodLog }       from './pages/FoodLog';
-import { Activity, WeightTracker, MealPlan } from './pages/OtherPages';
+import { Activity, WeightTracker } from './pages/OtherPages';
 import { CardioPage }    from './pages/CardioPage';
+import { HistoryPage }   from './pages/HistoryPage';
 
 import { useState } from 'react';
 
@@ -17,8 +18,8 @@ const TABS = [
   { id: 'home',     icon: '🏠', label: 'Accueil'  },
   { id: 'food',     icon: '🍽️', label: 'Repas'    },
   { id: 'activity', icon: '⚡', label: 'Activité' },
-  { id: 'cardio',   icon: '🏊', label: 'Cardio'   },
-  { id: 'weight',   icon: '⚖️', label: 'Poids'    },
+  { id: 'history',  icon: '📈', label: 'Historique'},
+  { id: 'cardio',   icon: '🏃', label: 'Cardio'   },
 ];
 
 export default function App() {
@@ -54,8 +55,8 @@ export default function App() {
         {tab === 'home'     && <Dashboard    foodLogs={logs} activityLogs={actLogs} weights={weights} />}
         {tab === 'food'     && <FoodLog      logs={logs} onAdd={addFood} onAddMany={addManyFood} onDelete={removeFood} />}
         {tab === 'activity' && <Activity     activityLogs={actLogs} onAdd={addActivity} onDelete={removeActivity} />}
+        {tab === 'history'  && <HistoryPage  foodLogs={logs} activityLogs={actLogs} weights={weights} />}
         {tab === 'cardio'   && <CardioPage />}
-        {tab === 'weight'   && <WeightTracker weights={weights} onAdd={addWeight} />}
       </main>
 
       <nav className="app-nav">

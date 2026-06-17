@@ -1,31 +1,30 @@
-const OFF_BASE = 'https://world.openfoodfacts.org/api/v2/search';
+/**
+ * Recherche d'aliments via Open Food Facts API
+ * Gratuit, pas de clé requise, base FR en priorité
+ * Requête via Netlify Function /api/food-search (pas de CORS)
+ */
+
+const normalize = s => s.toLowerCase()
+  .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .replace(/[^a-z0-9 ]/g, '');
 
 export async function searchFoods(query) {
   if (!query || query.length < 2) return [];
 
-  const params = new URLSearchParams({
-    search_terms: query,
-    fields:       'product_name,product_name_fr,brands,nutriments',
-    page_size:    20,
-    json:         1,
-  });
+  const res = await fetch(`/api/food-search?q=${encodeURIComponent(query)}`);
+  if (!res.ok) throw new Error(`food-search ${res.status}`);
 
-  const targetUrl = `${OFF_BASE}?${params}`;
-  const proxyUrl  = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+  const data = await res.json();
 
-  const res = await fetch(proxyUrl);
-  if (!res.ok) throw new Error(`Proxy ${res.status}`);
-
-  const wrapper = await res.json();
-  const data    = JSON.parse(wrapper.contents);
-
-  const queryLower = query.toLowerCase();
+  const queryNorm  = normalize(query);
+  const queryWords = queryNorm.split(' ').filter(w => w.length > 1);
 
   return (data.products || [])
     .filter(p => {
       const n    = p.nutriments;
-      const name = (p.product_name_fr || p.product_name || '').toLowerCase();
-      return name.includes(queryLower) && n?.['energy-kcal_100g'] > 0;
+      const name = normalize(p.product_name_fr || p.product_name || '');
+      // Au moins un mot de la recherche doit être dans le nom du produit
+      return name && queryWords.some(w => name.includes(w)) && n?.['energy-kcal_100g'] > 0;
     })
     .map(p => {
       const n     = p.nutriments;
