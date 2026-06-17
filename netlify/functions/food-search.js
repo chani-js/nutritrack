@@ -1,33 +1,40 @@
-export default async (req) => {
-  const url  = new URL(req.url);
-  const query = url.searchParams.get('q') || '';
+const handler = async (event) => {
+  const query = event.queryStringParameters?.q || '';
 
   if (!query || query.length < 2) {
-    return new Response(JSON.stringify({ products: [] }), {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ products: [] }),
+    };
   }
 
-  const params = new URLSearchParams({
-    search_terms: query,
-    fields:       'product_name,product_name_fr,brands,nutriments',
-    page_size:    20,
-    json:         1,
-  });
+  try {
+    const params = new URLSearchParams({
+      search_terms: query,
+      fields:       'product_name,product_name_fr,brands,nutriments',
+      page_size:    20,
+      json:         1,
+    });
 
-  const res = await fetch(
-    `https://world.openfoodfacts.org/api/v2/search?${params}`,
-    { headers: { 'User-Agent': 'NutriTrack/1.0' } }
-  );
+    const res = await fetch(
+      `https://world.openfoodfacts.org/api/v2/search?${params}`,
+      { headers: { 'User-Agent': 'NutriTrack/1.0' } }
+    );
 
-  const data = await res.json();
+    const data = await res.json();
 
-  return new Response(JSON.stringify(data), {
-    headers: {
-      'Content-Type':                'application/json',
-      'Access-Control-Allow-Origin': '*',
-    },
-  });
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify(data),
+    };
+  } catch (err) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: err.message }),
+    };
+  }
 };
 
-export const config = { path: '/api/food-search' };
+exports.handler = handler;
